@@ -42,9 +42,11 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<ResponseEntity<Void>> deleteEmployee(@PathVariable String id) {
         return employeeService.deleteEmployee(id)
-                .then(Mono.just(ResponseEntity.ok().<Void>build()))
+                .then(Mono.just(ResponseEntity.noContent().<Void>build()))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
+
 }
