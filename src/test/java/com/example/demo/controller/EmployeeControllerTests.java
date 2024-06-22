@@ -13,9 +13,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 @ExtendWith(SpringExtension.class)
 @WebFluxTest(controllers = EmployeeController.class)
@@ -78,6 +81,40 @@ public class EmployeeControllerTests {
                 .jsonPath("$.firstName").isEqualTo(employeeDto.getFirstName())
                 .jsonPath("$.lastName").isEqualTo(employeeDto.getLastName())
                 .jsonPath("$.email").isEqualTo(employeeDto.getEmail());
+    }
+
+    @Test
+    public void givenListOfEmployees_whenGetAllEmployees_thenReturnListOfEmployees() {
+        //given
+        List<EmployeeDto> employeeList = new ArrayList<>();
+
+        EmployeeDto employeeDto1 = new EmployeeDto();
+        employeeDto1.setFirstName("oguz");
+        employeeDto1.setLastName("karadag");
+        employeeDto1.setEmail("karadagoguzkaan@gmail.com");
+        employeeList.add(employeeDto1);
+
+        EmployeeDto employeeDto2 = new EmployeeDto();
+        employeeDto2.setFirstName("selcuk");
+        employeeDto2.setLastName("karadag");
+        employeeDto2.setEmail("karadagselcuk@gmail.com");
+        employeeList.add(employeeDto2);
+
+        //convert list to Flux type
+        Flux<EmployeeDto> employeeDtoFlux = Flux.fromIterable(employeeList);
+
+        BDDMockito.given(employeeService.getAllEmployees())
+                .willReturn(employeeDtoFlux);
+
+        //when
+        WebTestClient.ResponseSpec response = webTestClient.get().uri("/api/employees")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange();
+
+        //then
+        response.expectStatus().isOk()
+                .expectBodyList(EmployeeDto.class)
+                .consumeWith(System.out::println);
     }
 
 }
