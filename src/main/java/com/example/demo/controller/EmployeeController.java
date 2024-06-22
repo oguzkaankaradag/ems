@@ -3,28 +3,29 @@ package com.example.demo.controller;
 import com.example.demo.dto.EmployeeDto;
 import com.example.demo.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/employees")
+@RequestMapping("/api/employees")
 public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
 
     @PostMapping
-    public Mono<ResponseEntity<EmployeeDto>> addEmployee(@RequestBody EmployeeDto employeeDto) {
-        return employeeService.addEmployee(employeeDto)
-                .map(savedEmployee -> ResponseEntity.ok(savedEmployee));
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<EmployeeDto> addEmployee(@RequestBody EmployeeDto employeeDto) {
+        return employeeService.addEmployee(employeeDto);
     }
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity<EmployeeDto>> getEmployeeById(@PathVariable String id) {
         return employeeService.getEmployeeById(id)
-                .map(employee -> ResponseEntity.ok(employee))
+                .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
@@ -43,7 +44,7 @@ public class EmployeeController {
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Void>> deleteEmployee(@PathVariable String id) {
         return employeeService.deleteEmployee(id)
-                .map(deleted -> ResponseEntity.ok().<Void>build())
+                .then(Mono.just(ResponseEntity.ok().<Void>build()))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
