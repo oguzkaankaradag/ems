@@ -117,4 +117,56 @@ public class EmployeeControllerTests {
                 .consumeWith(System.out::println);
     }
 
+    @Test
+    public void givenUpdatedEmployee_whenUpdateEmployee_thenReturnUpdatedEmployeeObject() {
+        // given - pre-conditions
+        String employeeId = "123";
+
+        EmployeeDto employeeDto = new EmployeeDto();
+        employeeDto.setId(employeeId);  // Ensure the DTO has the correct ID
+        employeeDto.setFirstName("oguz");
+        employeeDto.setLastName("karadag");
+        employeeDto.setEmail("karadagoguzkaan@gmail.com");
+
+        BDDMockito.given(employeeService.updateEmployee(ArgumentMatchers.eq(employeeId), ArgumentMatchers.any(EmployeeDto.class)))
+                .willReturn(Mono.just(employeeDto));
+
+        // when - action or behaviour
+        WebTestClient.ResponseSpec response = webTestClient.put().uri("/api/employees/{id}", Collections.singletonMap("id", employeeId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(Mono.just(employeeDto), EmployeeDto.class)
+                .exchange();
+
+        // then - verify the result or output
+        response.expectStatus().isOk()
+                .expectBody()
+                .consumeWith(System.out::println)
+                .jsonPath("$.firstName").isEqualTo(employeeDto.getFirstName())
+                .jsonPath("$.lastName").isEqualTo(employeeDto.getLastName())
+                .jsonPath("$.email").isEqualTo(employeeDto.getEmail());
+    }
+
+
+    @Test
+    public void givenEmployeeId_whenDeleteEmployee_thenReturnNothing(){
+
+        // given - pre-conditions
+        String employeeId = "123";
+        Mono<Void> voidMono = Mono.empty();
+        BDDMockito.given(employeeService.deleteEmployee(employeeId))
+                .willReturn(voidMono);
+
+        // when - action or behaviour
+        WebTestClient.ResponseSpec response = webTestClient
+                .delete()
+                .uri("/api/employees/{id}", Collections.singletonMap("id", employeeId))
+                .exchange();
+
+        // then - verify the output
+        response.expectStatus().isNoContent()
+                .expectBody()
+                .consumeWith(System.out::println);
+    }
+
 }
